@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "rig": "front-cat-v1",
+  "canvas": [
+    600,
+    740
+  ],
+  "layers": {
+    "head": {
+      "file": "head.png",
+      "width": 403,
+      "height": 384
+    },
+    "blink": {
+      "file": "blink.png",
+      "width": 415,
+      "height": 384
+    },
+    "torso": {
+      "file": "torso.png",
+      "width": 404,
+      "height": 385
+    },
+    "armLeft": {
+      "file": "armLeft.png",
+      "width": 160,
+      "height": 352
+    },
+    "armRight": {
+      "file": "armRight.png",
+      "width": 168,
+      "height": 350
+    },
+    "legLeft": {
+      "file": "legLeft.png",
+      "width": 138,
+      "height": 382
+    },
+    "tail": {
+      "file": "tail.png",
+      "width": 373,
+      "height": 332
+    },
+    "backAccessory": {
+      "file": "backAccessory.png",
+      "width": 486,
+      "height": 360
+    },
+    "legRight": {
+      "file": "legRight.png",
+      "width": 139,
+      "height": 365
+    }
+  },
+  "formImage": "/assets/pet/stage-1.png",
+  "danceLoops": 3,
+  "loopSeconds": 4.0536679401
+}

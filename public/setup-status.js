@@ -1,0 +1,7 @@
+(() => {
+  const button=document.createElement('button');button.className='secondary-button';button.textContent='功能说明';button.style.cssText='position:fixed;right:12px;bottom:10px;z-index:6;font-size:12px;padding:6px 10px';
+  const dialog=document.createElement('dialog');dialog.className='game-dialog';
+  dialog.innerHTML='<div class="dialog-top"><span class="tiny-label">小屋功能</span><button class="close-button" aria-label="关闭功能说明">×</button></div><h2>先玩，再选需要的功能</h2><p class="dialog-copy">基础养成不需要 AI key：写故事、领食材、做菜、喂食、两次进化和对应动作都能使用。</p><div class="optional-status"></div><p class="small-note">聊天、转文字、发声、看图和后续 AI 进化都是选配。不填相应服务，只影响该功能。服务可能收费。配置由部署者在服务器完成，网页不收集密钥。</p>';
+  dialog.querySelector('button').onclick=()=>dialog.close();document.body.append(button,dialog);
+  button.onclick=async()=>{const status=dialog.querySelector('.optional-status');status.replaceChildren();try{const c=await(await fetch('/api/capabilities')).json();for(const [label,key] of [['聊天','chatConfigured'],['转文字','transcriptionConfigured'],['发声','speechConfigured'],['看图','visionConfigured']]){const p=document.createElement('p');p.className='dialog-copy';p.textContent=label+'：'+(c[key]?'已填配置，实际可用性需测试':'未配置（选配）');status.append(p);}const p=document.createElement('p');p.className='dialog-copy';p.textContent='额外生图：'+(c.generationEnabled?'已启用，可能产生费用':'未启用（选配）');status.append(p);}catch{status.textContent='暂时没能读取功能状态。';}dialog.showModal();};
+})();

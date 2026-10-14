@@ -1,0 +1,50 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const home = require('../home-service');
+const { createMemory } = require('../memory-service');
+const voice = require('../voice-service');
+const fresh = () => { const s = { readings: 0, claimedRewards: 0, food: 0, feeds: 0 }; home.migrate(s); return s; };
+test('没有喜好记录时不会把房间颜色说成记忆；近期提问也不是喜好证据', async () => {
+  const reply = await voice.chat('你记得我最喜欢什么颜色吗？', [{ role: 'user', content: '我最喜欢什么颜色？' }], { feeds: 0, room: 'pink' }, [{ type: 'story', text: '小兔子种花' }]);
+  assert.match(reply, /还没记下/); assert.doesNotMatch(reply, /粉色/);
+});
+test('旧奖励迁移不重复；读书、食材、做菜、喂食守恒；不能空手做菜或喂食', () => {
+  const s = { readings: 5, claimedRewards: 2, food: 1, feeds: 1 }; home.migrate(s);
+  assert.equal(home.available(s), 1); home.migrate(s); assert.equal(home.available(s), 1);
+  home.action(s, 'claim', { ingredients: ['egg'] }); assert.equal(home.available(s), 0);
+  assert.throws(() => home.action(s, 'claim', { ingredients: ['fish'] }), /额度/);
+  assert.throws(() => home.action(s, 'cook', { recipe: 'tomato-egg' }), /西红柿/);
+  assert.equal(s.ingredients.egg, 1);
+  s.readings++; require('../story-rewards').grant(s,{id:'next-story',createdAt:Date.now()});
+  home.action(s, 'claim', { ingredients: ['tomato'] });
+  home.action(s, 'cook', { recipe: 'tomato-egg' });
+  assert.equal(s.ingredients.egg, 0); assert.equal(s.ingredients.tomato, 0); assert.equal(s.dishes['tomato-egg'], 1);
+  home.action(s, 'feed', { dish: 'tomato-egg' }); assert.equal(s.feeds, 2); assert.equal(s.food, 1);
+  assert.throws(() => home.action(s, 'feed', { dish: 'tomato-egg' }), /做一道菜/);
+  home.action(s, 'feed', { dish: 'strawberry' }); assert.equal(s.feeds, 3); assert.equal(home.totalFood(s), 0);
+  assert.throws(() => home.action(s, 'claim', { ingredients: ['not-food'] }), /食材/);
+});
+test('生日按中国日期，一年庆祝一次；闰日有合理日期；不存在的日期不接受', () => {
+  const s = fresh(); home.action(s, 'birthday', { date: '02-29' });
+  assert.equal(home.birthdayView(s, new Date('2027-02-27T16:05:00Z')).today, true);
+  assert.equal(home.birthdayView(s, new Date('2028-02-28T16:05:00Z')).today, true);
+  assert.throws(() => home.action(s, 'birthday', { date: '02-30' }), /不存在/);
+  home.action(s, 'birthday', { date: new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai', month: '2-digit', day: '2-digit' }).format(new Date()) });
+  home.action(s, 'celebrate', {}); assert.throws(() => home.action(s, 'celebrate', {}), /已经/);
+});
+test('记忆跨存档存在、喜好替换、故事摘记兜底、删除阻断在途记忆和旧对话', async () => {
+  const state = { stories: [], chatMessages: [{ content: '我喜欢紫色' }] }; let saves = 0;
+  let resolve; let output = [{ type: 'preference', key: 'favorite-color', text: '喜欢粉色' }];
+  const memory = createMemory({ state, save: () => saves++, extract: async () => output });
+  memory.learn('我喜欢粉色', 'chat-1'); await memory.settled(); assert.equal(state.memories.length, 1);
+  output = [{ type: 'preference', key: 'favorite-color', text: '现在喜欢紫色' }]; memory.learn('我现在喜欢紫色', 'chat-2'); await memory.settled();
+  assert.equal(state.memories.length, 1); assert.match(state.memories[0].text, /紫色/);
+  const persisted = JSON.parse(JSON.stringify(state)); const restored = createMemory({ state: persisted, save: () => {}, extract: async () => [] });
+  assert.match(restored.relevant('我喜欢什么')[0].text, /紫色/);
+  output = []; memory.story({ id: 'story-1', transcript: '小兔子种花。' }); await memory.settled(); assert.ok(state.memories.some(m => m.text.includes('小兔子')));
+  const queued = createMemory({ state, save: () => {}, extract: async () => await new Promise(r => resolve = r) });
+  queued.learn('我喜欢紫色', 'late'); await new Promise(r => setImmediate(r));
+  assert.equal(queued.remove(state.memories.find(m => m.type === 'preference').id), true);
+  resolve([{ type: 'preference', key: 'favorite-color', text: '喜欢紫色' }]); await queued.settled();
+  assert.equal(state.memories.filter(m => m.type === 'preference').length, 0); assert.deepEqual(state.chatMessages, []); assert.ok(saves > 0);
+});

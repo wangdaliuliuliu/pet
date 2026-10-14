@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+data
+node_modules
+.venv
+*.log
+*.zip
+*.tar.gz
+preview
+output
+deploy
+.tools

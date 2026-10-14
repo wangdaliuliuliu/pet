@@ -1,0 +1,14 @@
+{
+  "name": "pet",
+  "version": "1.0.0",
+  "description": "A local-first pet game with guided agent setup and optional AI services",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node server.js",
+    "setup": "node scripts/setup.cjs",
+    "doctor": "node scripts/config-doctor.cjs",
+    "test": "node --test test/*.test.js",
+    "check:evolution": "node scripts/check-evolution.js"
+  }
+}

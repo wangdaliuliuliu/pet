@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "characterId": "default-pet",
+  "recordedEvolutionCount": 2,
+  "totalForms": 3,
+  "forms": [
+    {
+      "level": 0,
+      "image": "/assets/pet/stage-0.png",
+      "hasAlpha": false
+    },
+    {
+      "level": 1,
+      "image": "/assets/pet/stage-1.png",
+      "hasAlpha": true,
+      "animationManifest": "/assets/pet/animations/stage-1/manifest.json"
+    },
+    {
+      "level": 2,
+      "image": "/assets/pet/stage-2.png",
+      "hasAlpha": true,
+      "animationManifest": "/assets/pet/animations/stage-2/manifest.json"
+    }
+  ],
+  "runtimeIntegration": "bundled-growth"
+}

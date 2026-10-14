@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: pet
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PET_DATA_DIR
+        value: /tmp/pet-data
+      - key: PET_ACCESS_PASSWORD
+        generateValue: true
+      - key: PET_ENABLE_GENERATION
+        value: "0"
+      - key: PET_ENABLE_TRIPS
+        value: "0"
+      - key: PET_DISABLE_TRIPS
+        value: "1"
